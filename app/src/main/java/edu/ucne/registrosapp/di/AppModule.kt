@@ -12,6 +12,10 @@ import edu.ucne.registrosapp.data.local.database.RegistrosDb
 import edu.ucne.registrosapp.data.repository.EstudianteRepositoryImpl
 import edu.ucne.registrosapp.domain.repository.EstudianteRepository
 import javax.inject.Singleton
+import edu.ucne.registrosapp.domain.usecase.GetEstudianteUseCase
+import edu.ucne.registrosapp.domain.usecase.ObserveEstudiantesUseCase
+import edu.ucne.registrosapp.domain.usecase.UpsertEstudianteUseCase
+import edu.ucne.registrosapp.domain.usecase.DeleteEstudianteUseCase
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -37,5 +41,27 @@ object AppModule {
     @Singleton
     fun provideEstudianteRepository(estudianteDao: EstudianteDao): EstudianteRepository {
         return EstudianteRepositoryImpl(estudianteDao)
+    }
+
+    // Nuevos provides para UseCases
+
+    @Provides
+    fun provideUpsertEstudianteUseCase(repository: EstudianteRepository): UpsertEstudianteUseCase {
+        return UpsertEstudianteUseCase(repository)
+    }
+
+    @Provides
+    fun provideObserveEstudiantesUseCase(repository: EstudianteRepository): ObserveEstudiantesUseCase {
+        return ObserveEstudiantesUseCase(repository)
+    }
+
+    @Provides
+    fun provideGetEstudianteUseCase(repository: EstudianteRepository): GetEstudianteUseCase {
+        return GetEstudianteUseCase(repository)
+    }
+
+    @Provides
+    fun provideDeleteEstudianteUseCase(repository: EstudianteRepository): DeleteEstudianteUseCase {
+        return DeleteEstudianteUseCase(repository)
     }
 }
