@@ -23,4 +23,7 @@ interface EstudianteDao {
 
     @Query("DELETE FROM estudiantes WHERE estudianteId = :id")
     suspend fun deleteById(id: Int)
+
+    @Query("SELECT * FROM Estudiantes WHERE nombres = :nombres LIMIT 1")
+    suspend fun getByNombres(nombres: String): EstudianteEntity?
 }
