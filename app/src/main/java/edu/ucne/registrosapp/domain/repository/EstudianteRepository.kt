@@ -8,4 +8,5 @@ interface EstudianteRepository {
     suspend fun getEstudiante(id: Int): Estudiante?
     suspend fun upsert(estudiante: Estudiante): Int
     suspend fun delete(id: Int)
+    suspend fun getByNombres(nombres: String): Estudiante?
 }
