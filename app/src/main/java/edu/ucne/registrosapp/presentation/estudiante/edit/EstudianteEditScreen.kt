@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.registrosapp.presentation.components.ConfirmDeleteDialog
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun EstudianteEditScreen(
@@ -197,5 +198,57 @@ private fun EstudianteEditBody(
                 Text("Volver")
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Nuevo Estudiante")
+@Composable
+private fun EstudianteAddPreview() {
+    MaterialTheme {
+        EstudianteEditBody(
+            state = EstudianteEditUiState(isNew = true),
+            onEvent = {},
+            onNavigateBack = {},
+            onDeleteClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Editar con datos")
+@Composable
+private fun EstudianteEditPreview() {
+    MaterialTheme {
+        EstudianteEditBody(
+            state = EstudianteEditUiState(
+                isNew = false,
+                nombres = "Emidalia Almarante",
+                email = "emiEmi@gmail.com",
+                edad = "22"
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onDeleteClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Editar con errores")
+@Composable
+private fun EstudianteEditErrorsPreview() {
+    MaterialTheme {
+        EstudianteEditBody(
+            state = EstudianteEditUiState(
+                isNew = false,
+                nombres = "",
+                nombresError = "El nombre es requerido",
+                email = "correo-invalido",
+                emailError = "Formato de email inválido",
+                edad = "999",
+                edadError = "Edad fuera de rango"
+            ),
+            onEvent = {},
+            onNavigateBack = {},
+            onDeleteClick = {}
+        )
     }
 }
