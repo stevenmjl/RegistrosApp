@@ -192,11 +192,45 @@ private fun EstudianteCard(
     }
 }
 
-@Preview
+@Preview(showBackground = true, name = "Lista con Estudiantes")
 @Composable
-private fun EstudianteListBodyPreview() {
+private fun EstudianteListWithDataPreview() {
     MaterialTheme {
-        val state = EstudianteListUiState()
-        EstudianteListBody(state, onDrawer = {}, onEvent = {})
+        EstudianteListBody(
+            state = EstudianteListUiState(
+                isLoading = false,
+                estudiantes = listOf(
+                    Estudiante(
+                        1,
+                        "Willy Bai Zai",
+                        "willy3@gmail.com",
+                        25),
+                    Estudiante(
+                        2,
+                        "Emidalia Almarante",
+                        "emiEmi@gmail.com",
+                        22),
+                    Estudiante(
+                        3,
+                        "Eustácio Coragem",
+                        "lupussRoze@hotmail.com",
+                        19)
+                )
+            ),
+            onDrawer = {},
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Lista Vacía")
+@Composable
+private fun EstudianteListEmptyPreview() {
+    MaterialTheme {
+        EstudianteListBody(
+            state = EstudianteListUiState(isLoading = false, estudiantes = emptyList()),
+            onDrawer = {},
+            onEvent = {}
+        )
     }
 }
