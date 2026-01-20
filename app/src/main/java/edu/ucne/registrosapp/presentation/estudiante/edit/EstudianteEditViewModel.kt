@@ -61,14 +61,15 @@ class EstudianteEditViewModel @Inject constructor(
     }
 
     private fun onSave() {
-        val nombres = state.value.nombres
-        val email = state.value.email
-        val edadStr = state.value.edad
+        // 1. Limpiar los espacios inmediatamente usando .trim()
+        val nombresLimpio = state.value.nombres.trim()
+        val emailLimpio = state.value.email.trim()
+        val edadStrLimpio = state.value.edad.trim()
 
-        // 1. Validaciones de formato iniciales
-        val vNombres = validateNombres(nombres)
-        val vEmail = validateEmail(email)
-        val vEdad = validateEdad(edadStr)
+        // 2. Validaciones de formato usando los valores limpios
+        val vNombres = validateNombres(nombresLimpio)
+        val vEmail = validateEmail(emailLimpio)
+        val vEdad = validateEdad(edadStrLimpio)
 
         if (!vNombres.isValid || !vEmail.isValid || !vEdad.isValid) {
             _state.update {
@@ -84,10 +85,10 @@ class EstudianteEditViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
 
-            // 2. Validación de nombre único
-            val estudianteExistente = getEstudianteByNombresUseCase(nombres)
+            // 3. Validación de nombre único con el nombre ya LIMPIO
+            val estudianteExistente = getEstudianteByNombresUseCase(nombresLimpio)
 
-            // Si el nombre ya existe y no pertenece al estudiante que estamos editando
+            // Si el nombre ya existe y no es el mismo que estamos editando
             if (estudianteExistente != null && estudianteExistente.estudianteId != state.value.estudianteId) {
                 _state.update {
                     it.copy(
@@ -98,12 +99,12 @@ class EstudianteEditViewModel @Inject constructor(
                 return@launch
             }
 
-            // 3. Proceder con el guardado si todo esta bien
+            // 4. Crear el objeto Estudiante con datos limpios para guardar
             val estudiante = Estudiante(
                 estudianteId = state.value.estudianteId,
-                nombres = nombres,
-                email = email,
-                edad = edadStr.toIntOrNull() ?: 0
+                nombres = nombresLimpio,
+                email = emailLimpio,
+                edad = edadStrLimpio.toIntOrNull() ?: 0
             )
 
             val result = upsertEstudianteUseCase(estudiante)
@@ -114,7 +115,6 @@ class EstudianteEditViewModel @Inject constructor(
             }
         }
     }
-
     private fun onDelete() {
         val id = state.value.estudianteId ?: return
         viewModelScope.launch {
