@@ -16,6 +16,10 @@ import edu.ucne.registrosapp.domain.usecase.estudiante.GetEstudianteUseCase
 import edu.ucne.registrosapp.domain.usecase.estudiante.ObserveEstudiantesUseCase
 import edu.ucne.registrosapp.domain.usecase.estudiante.UpsertEstudianteUseCase
 import edu.ucne.registrosapp.domain.usecase.estudiante.DeleteEstudianteUseCase
+import edu.ucne.registrosapp.data.local.dao.AsignaturaDao
+import edu.ucne.registrosapp.data.repository.AsignaturaRepositoryImpl
+import edu.ucne.registrosapp.domain.repository.AsignaturaRepository
+import edu.ucne.registrosapp.domain.usecase.asignatura.*
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,7 +47,7 @@ object AppModule {
         return EstudianteRepositoryImpl(estudianteDao)
     }
 
-    // Nuevos provides para UseCases
+    // Provides para Estudiantes
 
     @Provides
     fun provideUpsertEstudianteUseCase(repository: EstudianteRepository): UpsertEstudianteUseCase {
@@ -63,5 +67,43 @@ object AppModule {
     @Provides
     fun provideDeleteEstudianteUseCase(repository: EstudianteRepository): DeleteEstudianteUseCase {
         return DeleteEstudianteUseCase(repository)
+    }
+
+    // Provides para Asignaturas
+
+    @Provides
+    fun provideAsignaturaDao(db: RegistrosDb): AsignaturaDao {
+        return db.asignaturaDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAsignaturaRepository(asignaturaDao: AsignaturaDao): AsignaturaRepository {
+        return AsignaturaRepositoryImpl(asignaturaDao)
+    }
+
+    @Provides
+    fun provideUpsertAsignaturaUseCase(repository: AsignaturaRepository): UpsertAsignaturaUseCase {
+        return UpsertAsignaturaUseCase(repository)
+    }
+
+    @Provides
+    fun provideObservarAsignaturasUseCase(repository: AsignaturaRepository): ObserveAsignaturasUseCase {
+        return ObserveAsignaturasUseCase(repository)
+    }
+
+    @Provides
+    fun provideGetAsignaturaUseCase(repository: AsignaturaRepository): GetAsignaturaUseCase {
+        return GetAsignaturaUseCase(repository)
+    }
+
+    @Provides
+    fun provideDeleteAsignaturaUseCase(repository: AsignaturaRepository): DeleteAsignaturaUseCase {
+        return DeleteAsignaturaUseCase(repository)
+    }
+
+    @Provides
+    fun provideGetAsignaturaByNombreUseCase(repository: AsignaturaRepository): GetAsignaturaByNombreUseCase {
+        return GetAsignaturaByNombreUseCase(repository)
     }
 }
