@@ -39,7 +39,7 @@ fun DrawerMenu(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Registros App",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.DarkGray,
