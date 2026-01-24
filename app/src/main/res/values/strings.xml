@@ -2,4 +2,5 @@
     <string name="app_name">Registros App</string>
     <string name="drawer_title">Menú de Registro</string>
     <string name="drawer_estudiantes">Estudiantes</string>
+    <string name="drawer_asignaturas">Asignaturas</string>
 </resources>
