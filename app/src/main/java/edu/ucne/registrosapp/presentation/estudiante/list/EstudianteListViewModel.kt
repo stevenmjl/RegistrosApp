@@ -3,8 +3,8 @@ package edu.ucne.registrosapp.presentation.estudiante.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import edu.ucne.registrosapp.domain.usecase.DeleteEstudianteUseCase
-import edu.ucne.registrosapp.domain.usecase.ObserveEstudiantesUseCase
+import edu.ucne.registrosapp.domain.usecase.estudiante.DeleteEstudianteUseCase
+import edu.ucne.registrosapp.domain.usecase.estudiante.ObserveEstudiantesUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,4 +1,6 @@
-package edu.ucne.registrosapp.domain.usecase
+package edu.ucne.registrosapp.domain.usecase.estudiante
+
+import android.util.Patterns
 
 data class ValidationResult(
     val isValid: Boolean,
@@ -13,7 +15,7 @@ fun validateNombres(value: String): ValidationResult {
 
 fun validateEmail(value: String): ValidationResult {
     if (value.isBlank()) return ValidationResult(false, "El email es requerido")
-    if (!android.util.Patterns.EMAIL_ADDRESS.matcher(value).matches()) {
+    if (!Patterns.EMAIL_ADDRESS.matcher(value).matches()) {
         return ValidationResult(false, "Email no válido")
     }
     return ValidationResult(true)
