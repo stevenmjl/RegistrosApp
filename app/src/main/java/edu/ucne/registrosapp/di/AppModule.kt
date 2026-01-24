@@ -12,10 +12,10 @@ import edu.ucne.registrosapp.data.local.database.RegistrosDb
 import edu.ucne.registrosapp.data.repository.EstudianteRepositoryImpl
 import edu.ucne.registrosapp.domain.repository.EstudianteRepository
 import javax.inject.Singleton
-import edu.ucne.registrosapp.domain.usecase.GetEstudianteUseCase
-import edu.ucne.registrosapp.domain.usecase.ObserveEstudiantesUseCase
-import edu.ucne.registrosapp.domain.usecase.UpsertEstudianteUseCase
-import edu.ucne.registrosapp.domain.usecase.DeleteEstudianteUseCase
+import edu.ucne.registrosapp.domain.usecase.estudiante.GetEstudianteUseCase
+import edu.ucne.registrosapp.domain.usecase.estudiante.ObserveEstudiantesUseCase
+import edu.ucne.registrosapp.domain.usecase.estudiante.UpsertEstudianteUseCase
+import edu.ucne.registrosapp.domain.usecase.estudiante.DeleteEstudianteUseCase
 
 @Module
 @InstallIn(SingletonComponent::class)
