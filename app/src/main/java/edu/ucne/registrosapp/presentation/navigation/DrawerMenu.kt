@@ -8,13 +8,17 @@ import androidx.compose.material.icons.filled.MenuBook // Nuevo ícono
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import edu.ucne.registrosapp.R
+import edu.ucne.registrosapp.ui.theme.RegistrosAppTheme
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,5 +80,17 @@ fun DrawerMenu(
         drawerState = drawerState
     ) {
         content()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DrawerMenuPreview() {
+    RegistrosAppTheme {
+        DrawerMenu(
+            drawerState = rememberDrawerState(initialValue = DrawerValue.Open),
+            navHostController = rememberNavController(),
+            content = {}
+        )
     }
 }
