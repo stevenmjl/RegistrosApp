@@ -21,51 +21,19 @@ import edu.ucne.registrosapp.ui.theme.RegistrosAppTheme
 
 @Composable
 fun AsignaturaListScreen(
-    viewModel: AsignaturaListViewModel = hiltViewModel(),
     onDrawer: () -> Unit,
     onNavigateToCreate: () -> Unit,
-    onNavigateToEdit: (Int) -> Unit
+    onNavigateToEdit: (Int) -> Unit,
+    viewModel: AsignaturaListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var asignaturaIdToDelete by remember { mutableIntStateOf(0) }
-
-    if (showDeleteDialog) {
-        ConfirmDeleteDialog(
-            onConfirm = {
-                viewModel.onEvent(AsignaturaListEvent.Delete(asignaturaIdToDelete))
-                showDeleteDialog = false
-            },
-            onDismiss = { showDeleteDialog = false }
-        )
-    }
-
-    LaunchedEffect(state.navigateToCreate) {
-        if (state.navigateToCreate) {
-            onNavigateToCreate()
-            viewModel.onNavigationHandled()
-        }
-    }
-
-    LaunchedEffect(state.navigateToEditId) {
-        state.navigateToEditId?.let { id ->
-            onNavigateToEdit(id)
-            viewModel.onNavigationHandled()
-        }
-    }
-
     AsignaturaListBody(
         state = state,
+        onEvent = viewModel::onEvent,
         onDrawer = onDrawer,
-        onEvent = { event ->
-            if (event is AsignaturaListEvent.Delete) {
-                asignaturaIdToDelete = event.id
-                showDeleteDialog = true
-            } else {
-                viewModel.onEvent(event)
-            }
-        }
+        onNavigateToCreate = onNavigateToCreate,
+        onNavigateToEdit = onNavigateToEdit
     )
 }
 
@@ -73,9 +41,24 @@ fun AsignaturaListScreen(
 @Composable
 private fun AsignaturaListBody(
     state: AsignaturaListUiState,
+    onEvent: (AsignaturaListEvent) -> Unit,
     onDrawer: () -> Unit,
-    onEvent: (AsignaturaListEvent) -> Unit
+    onNavigateToCreate: () -> Unit,
+    onNavigateToEdit: (Int) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var asignaturaIdToDelete by remember { mutableIntStateOf(0) }
+
+    if (showDeleteDialog) {
+        ConfirmDeleteDialog(
+            onConfirm = {
+                onEvent(AsignaturaListEvent.Delete(asignaturaIdToDelete))
+                showDeleteDialog = false
+            },
+            onDismiss = { showDeleteDialog = false }
+        )
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -89,45 +72,39 @@ private fun AsignaturaListBody(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onEvent(AsignaturaListEvent.CreateNew) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                onClick = onNavigateToCreate,
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar")
             }
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-
-            if (state.asignaturas.isEmpty() && !state.isLoading) {
+            } else if (state.asignaturas.isEmpty()) {
                 Text(
-                    "No hay asignaturas registradas.",
+                    text = "No hay asignaturas registradas",
                     modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.titleMedium
                 )
-            }
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-            ) {
-                item { Spacer(Modifier.height(8.dp)) }
-                items(state.asignaturas) { asignatura ->
-                    AsignaturaCard(
-                        asignatura = asignatura,
-                        onClick = { onEvent(AsignaturaListEvent.Edit(asignatura.asignaturaId ?: 0)) },
-                        onDelete = { onEvent(AsignaturaListEvent.Delete(asignatura.asignaturaId ?: 0)) }
-                    )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+                ) {
+                    item { Spacer(Modifier.height(8.dp)) }
+                    items(state.asignaturas) { asignatura ->
+                        AsignaturaCard(
+                            asignatura = asignatura,
+                            onEdit = { onNavigateToEdit(asignatura.asignaturaId ?: 0) },
+                            onDelete = {
+                                asignaturaIdToDelete = asignatura.asignaturaId ?: 0
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
+                    item { Spacer(Modifier.height(80.dp)) }
                 }
-                item { Spacer(Modifier.height(80.dp)) }
             }
         }
     }
@@ -136,20 +113,18 @@ private fun AsignaturaListBody(
 @Composable
 private fun AsignaturaCard(
     asignatura: Asignatura,
-    onClick: (Int) -> Unit,
-    onDelete: (Int) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .clickable { onClick(asignatura.asignaturaId ?: 0) },
+            .clickable { onEdit() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -169,13 +144,11 @@ private fun AsignaturaCard(
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
-
-            IconButton(onClick = { onClick(asignatura.asignaturaId ?: 0) }) {
-                Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, "Editar", tint = MaterialTheme.colorScheme.primary)
             }
-
-            IconButton(onClick = { onDelete(asignatura.asignaturaId ?: 0) }) {
-                Icon(imageVector = Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, "Eliminar", tint = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -189,31 +162,14 @@ private fun AsignaturaListWithDataPreview() {
             state = AsignaturaListUiState(
                 isLoading = false,
                 asignaturas = listOf(
-                    Asignatura(
-                        1,
-                        "ISC-606",
-                        "Programación III",
-                        "Laboratorio A",
-                        4
-                    ),
-                    Asignatura(
-                        2,
-                        "MAT-330",
-                        "Cálculo Vectorial",
-                        "Edificio A-204",
-                        4
-                    ),
-                    Asignatura(
-                        3,
-                        "ADM-560",
-                        "Emprendimiento",
-                        "Aula Virtual",
-                        2
-                    )
-                )
+                    Asignatura(1,"ISC-606","Programación III","Laboratorio A",4),
+                    Asignatura(2,"MAT-330","Cálculo Vectorial","Edificio A-204",4),
+                    Asignatura(3,"ADM-560","Emprendimiento","Aula Virtual",2))
             ),
             onDrawer = {},
-            onEvent = {}
+            onEvent = {},
+            onNavigateToCreate = {},
+            onNavigateToEdit = {},
         )
     }
 }
@@ -225,7 +181,9 @@ private fun AsignaturaListEmptyPreview() {
         AsignaturaListBody(
             state = AsignaturaListUiState(isLoading = false, asignaturas = emptyList()),
             onDrawer = {},
-            onEvent = {}
+            onEvent = {},
+            onNavigateToCreate = {},
+            onNavigateToEdit = {},
         )
     }
 }
