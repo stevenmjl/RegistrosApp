@@ -18,57 +18,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import edu.ucne.registrosapp.domain.models.Estudiante
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.ui.text.font.FontWeight
 import edu.ucne.registrosapp.presentation.components.ConfirmDeleteDialog
 
 @Composable
 fun EstudianteListScreen(
-    viewModel: EstudianteListViewModel = hiltViewModel(),
     onDrawer: () -> Unit,
     onNavigateToCreate: () -> Unit,
-    onNavigateToEdit: (Int) -> Unit
+    onNavigateToEdit: (Int) -> Unit,
+    viewModel: EstudianteListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // Lógica del Diálogo usando el componente nuevo
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var estudianteIdToDelete by remember { mutableIntStateOf(0) }
-
-    if (showDeleteDialog) {
-        ConfirmDeleteDialog(
-            onConfirm = {
-                viewModel.onEvent(EstudianteListEvent.Delete(estudianteIdToDelete))
-                showDeleteDialog = false
-            },
-            onDismiss = { showDeleteDialog = false }
-        )
-    }
-
-    LaunchedEffect(state.navigateToCreate) {
-        if (state.navigateToCreate) {
-            onNavigateToCreate()
-            viewModel.onNavigationHandled()
-        }
-    }
-
-    LaunchedEffect(state.navigateToEditId) {
-        state.navigateToEditId?.let { id ->
-            onNavigateToEdit(id)
-            viewModel.onNavigationHandled()
-        }
-    }
-
     EstudianteListBody(
         state = state,
+        onEvent = viewModel::onEvent,
         onDrawer = onDrawer,
-        onEvent = { event ->
-            // Si el evento es borrar, interceptamos para mostrar el diálogo
-            if (event is EstudianteListEvent.Delete) {
-                estudianteIdToDelete = event.id
-                showDeleteDialog = true
-            } else {
-                viewModel.onEvent(event)
-            }
-        }
+        onNavigateToCreate = onNavigateToCreate,
+        onNavigateToEdit = onNavigateToEdit
     )
 }
 
@@ -76,9 +43,24 @@ fun EstudianteListScreen(
 @Composable
 private fun EstudianteListBody(
     state: EstudianteListUiState,
+    onEvent: (EstudianteListEvent) -> Unit,
     onDrawer: () -> Unit,
-    onEvent: (EstudianteListEvent) -> Unit
+    onNavigateToCreate: () -> Unit,
+    onNavigateToEdit: (Int) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var estudianteIdToDelete by remember { mutableIntStateOf(0) }
+
+    if (showDeleteDialog) {
+        ConfirmDeleteDialog(
+            onConfirm = {
+                onEvent(EstudianteListEvent.Delete(estudianteIdToDelete))
+                showDeleteDialog = false
+            },
+            onDismiss = { showDeleteDialog = false }
+        )
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -92,45 +74,39 @@ private fun EstudianteListBody(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onEvent(EstudianteListEvent.CreateNew) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                onClick = onNavigateToCreate,
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar")
             }
         }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
+        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-
-            if (state.estudiantes.isEmpty() && !state.isLoading) {
+            } else if (state.estudiantes.isEmpty()) {
                 Text(
-                    "No hay estudiantes registrados.",
+                    text = "No hay estudiantes registrados.",
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.bodyMedium
                 )
-            }
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-            ) {
-                item { Spacer(Modifier.height(8.dp)) }
-                items(state.estudiantes) { estudiante ->
-                    EstudianteCard(
-                        estudiante = estudiante,
-                        onClick = { onEvent(EstudianteListEvent.Edit(estudiante.estudianteId ?: 0)) },
-                        onDelete = { onEvent(EstudianteListEvent.Delete(estudiante.estudianteId ?: 0)) }
-                    )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+                ) {
+                    item { Spacer(Modifier.height(8.dp)) }
+                    items(state.estudiantes) { estudiante ->
+                        EstudianteCard(
+                            estudiante = estudiante,
+                            onEdit = { onNavigateToEdit(estudiante.estudianteId ?: 0) },
+                            onDelete = {
+                                estudianteIdToDelete = estudiante.estudianteId ?: 0
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
+                    item { Spacer(Modifier.height(80.dp)) }
                 }
-                item { Spacer(Modifier.height(80.dp)) } // Espacio para que el FAB no tape el último item
             }
         }
     }
@@ -139,27 +115,25 @@ private fun EstudianteListBody(
 @Composable
 private fun EstudianteCard(
     estudiante: Estudiante,
-    onClick: (Int) -> Unit,
-    onDelete: (Int) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .clickable { onClick(estudiante.estudianteId ?: 0) },
+            .clickable { onEdit() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = estudiante.nombres,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = estudiante.email,
@@ -173,20 +147,12 @@ private fun EstudianteCard(
                 )
             }
 
-            IconButton(onClick = { onClick(estudiante.estudianteId ?: 0) }) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Editar",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, "Editar", tint = MaterialTheme.colorScheme.primary)
             }
 
-            IconButton(onClick = { onDelete(estudiante.estudianteId ?: 0) }) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = MaterialTheme.colorScheme.error
-                )
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, "Eliminar", tint = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -200,25 +166,15 @@ private fun EstudianteListWithDataPreview() {
             state = EstudianteListUiState(
                 isLoading = false,
                 estudiantes = listOf(
-                    Estudiante(
-                        1,
-                        "Willy Bai Zai",
-                        "willy3@gmail.com",
-                        25),
-                    Estudiante(
-                        2,
-                        "Emidalia Almarante",
-                        "emiEmi@gmail.com",
-                        22),
-                    Estudiante(
-                        3,
-                        "Eustácio Coragem",
-                        "lupussRoze@hotmail.com",
-                        19)
+                    Estudiante(1,"Willy Bai Zai","willy3@gmail.com",25),
+                    Estudiante(2,"Emidalia Almarante","emiEmi@gmail.com",22),
+                    Estudiante(3,"Eustácio Coragem","lupussRoze@hotmail.com",19)
                 )
             ),
             onDrawer = {},
-            onEvent = {}
+            onEvent = {},
+            onNavigateToCreate = {},
+            onNavigateToEdit = {}
         )
     }
 }
@@ -230,7 +186,9 @@ private fun EstudianteListEmptyPreview() {
         EstudianteListBody(
             state = EstudianteListUiState(isLoading = false, estudiantes = emptyList()),
             onDrawer = {},
-            onEvent = {}
+            onEvent = {},
+            onNavigateToCreate = {},
+            onNavigateToEdit = {}
         )
     }
 }
