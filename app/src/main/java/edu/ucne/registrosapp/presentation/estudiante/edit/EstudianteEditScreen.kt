@@ -46,36 +46,33 @@ fun EstudianteEditScreen(
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    // Lógica del Diálogo usando el componente nuevo
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(estudianteId) {
+        viewModel.onEvent(EstudianteEditUiEvent.Load(estudianteId ?: 0))
+    }
 
     if (showDeleteDialog) {
         ConfirmDeleteDialog(
             onConfirm = {
                 viewModel.onEvent(EstudianteEditUiEvent.Delete)
+                onNavigateBack()
                 showDeleteDialog = false
             },
             onDismiss = { showDeleteDialog = false }
         )
     }
 
-    LaunchedEffect(estudianteId) {
-        viewModel.onEvent(EstudianteEditUiEvent.Load(estudianteId ?: 0))
-    }
-
-    LaunchedEffect(state.saved, state.deleted) {
-        if (state.saved || state.deleted) {
-            onNavigateBack()
-        }
-    }
-
-    // Pasar la función al Body
     EstudianteEditBody(
         state = state,
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
-        onDeleteClick = { showDeleteDialog = true }
+        onDeleteClick = { showDeleteDialog = true },
+        onSaveSuccess = {
+            if (state.nombresError == null && state.emailError == null && state.edadError == null) {
+                onNavigateBack()
+            }
+        }
     )
 }
 
@@ -84,7 +81,8 @@ private fun EstudianteEditBody(
     state: EstudianteEditUiState,
     onEvent: (EstudianteEditUiEvent) -> Unit,
     onNavigateBack: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onSaveSuccess: () -> Unit
 ) {
     Scaffold { padding ->
         Column(
@@ -92,6 +90,7 @@ private fun EstudianteEditBody(
                 .padding(padding)
                 .padding(16.dp)
         ) {
+            // Cabecera de Persona
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -117,6 +116,7 @@ private fun EstudianteEditBody(
                 color = MaterialTheme.colorScheme.primaryContainer
             )
 
+            // Campo Nombres
             OutlinedTextField(
                 value = state.nombres,
                 onValueChange = { onEvent(EstudianteEditUiEvent.NombresChanged(it)) },
@@ -130,6 +130,7 @@ private fun EstudianteEditBody(
 
             Spacer(Modifier.height(16.dp))
 
+            // Campo Email
             OutlinedTextField(
                 value = state.email,
                 onValueChange = { onEvent(EstudianteEditUiEvent.EmailChanged(it)) },
@@ -144,6 +145,7 @@ private fun EstudianteEditBody(
 
             Spacer(Modifier.height(16.dp))
 
+            // Campo Edad
             OutlinedTextField(
                 value = state.edad,
                 onValueChange = { onEvent(EstudianteEditUiEvent.EdadChanged(it)) },
@@ -158,9 +160,13 @@ private fun EstudianteEditBody(
 
             Spacer(Modifier.height(32.dp))
 
+            // Botones
             Row(modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = { onEvent(EstudianteEditUiEvent.Save) },
+                    onClick = {
+                        onEvent(EstudianteEditUiEvent.Save)
+                        onSaveSuccess()
+                    },
                     enabled = !state.isSaving,
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(vertical = 12.dp)
@@ -189,6 +195,7 @@ private fun EstudianteEditBody(
                     }
                 }
             }
+
             Spacer(Modifier.height(8.dp))
 
             TextButton(
@@ -209,7 +216,8 @@ private fun EstudianteAddPreview() {
             state = EstudianteEditUiState(isNew = true),
             onEvent = {},
             onNavigateBack = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onSaveSuccess = {}
         )
     }
 }
@@ -227,7 +235,8 @@ private fun EstudianteEditPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onSaveSuccess = {}
         )
     }
 }
@@ -248,7 +257,8 @@ private fun EstudianteEditErrorsPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onSaveSuccess = {}
         )
     }
 }
