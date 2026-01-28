@@ -26,31 +26,32 @@ fun AsignaturaEditScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(asignaturaId) {
+        viewModel.onEvent(AsignaturaEditUiEvent.Load(asignaturaId ?: 0))
+    }
+
     if (showDeleteDialog) {
         ConfirmDeleteDialog(
             onConfirm = {
                 viewModel.onEvent(AsignaturaEditUiEvent.Delete)
+                onNavigateBack()
                 showDeleteDialog = false
             },
             onDismiss = { showDeleteDialog = false }
         )
     }
 
-    LaunchedEffect(asignaturaId) {
-        viewModel.onEvent(AsignaturaEditUiEvent.Load(asignaturaId ?: 0))
-    }
-
-    LaunchedEffect(state.saved, state.deleted) {
-        if (state.saved || state.deleted) {
-            onNavigateBack()
-        }
-    }
-
     AsignaturaEditBody(
         state = state,
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
-        onDeleteClick = { showDeleteDialog = true }
+        onDeleteClick = { showDeleteDialog = true },
+        onSaveSuccess = {
+            if (state.codigoError == null && state.nombreError == null &&
+                state.aulaError == null && state.creditosError == null) {
+                onNavigateBack()
+            }
+        }
     )
 }
 
@@ -59,7 +60,8 @@ private fun AsignaturaEditBody(
     state: AsignaturaEditUiState,
     onEvent: (AsignaturaEditUiEvent) -> Unit,
     onNavigateBack: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onSaveSuccess: () -> Unit
 ) {
     Scaffold { padding ->
         Column(
@@ -142,7 +144,7 @@ private fun AsignaturaEditBody(
                     modifier = Modifier.width(100.dp)
                 )
             }
-            // Errores de la fila
+
             Row {
                 Box(modifier = Modifier.weight(1f)) {
                     state.aulaError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall) }
@@ -157,7 +159,10 @@ private fun AsignaturaEditBody(
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = { onEvent(AsignaturaEditUiEvent.Save) },
+                    onClick = {
+                        onEvent(AsignaturaEditUiEvent.Save)
+                        onSaveSuccess()
+                    },
                     enabled = !state.isSaving,
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(vertical = 12.dp)
@@ -207,7 +212,8 @@ private fun AsignaturaAddPreview() {
             state = AsignaturaEditUiState(isNew = true),
             onEvent = {},
             onNavigateBack = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onSaveSuccess = {}
         )
     }
 }
@@ -227,7 +233,8 @@ private fun AsignaturaEditPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onSaveSuccess = {}
         )
     }
 }
@@ -250,7 +257,8 @@ private fun AsignaturaEditErrorsPreview() {
             ),
             onEvent = {},
             onNavigateBack = {},
-            onDeleteClick = {}
+            onDeleteClick = {},
+            onSaveSuccess = {}
         )
     }
 }
