@@ -178,7 +178,7 @@ private fun EstudianteEditBody(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Guardar Estudiante")
+                        Text("Guardar")
                     }
                 }
 
